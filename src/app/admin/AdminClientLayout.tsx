@@ -143,9 +143,9 @@ export default function AdminClientLayout({ user, children }: any) {
                   overflow: 'hidden', minWidth: '160px', zIndex: 10,
                   boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
                 }}>
-                  <Link href="/api/auth/logout?redirect=/admin/login" onClick={handleLogout} style={{ padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', fontWeight: 600, fontSize: '0.875rem' }}>
+                  <a href="/api/auth/logout?redirect=/admin/login" onClick={handleLogout} style={{ padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none' }}>
                     ↩ Keluar
-                  </Link>
+                  </a>
                 </div>
               </>
             )}

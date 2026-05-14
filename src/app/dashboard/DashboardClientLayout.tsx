@@ -167,14 +167,15 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     👤 Pengaturan Profil
                   </a>
-                  <Link href="/api/auth/logout" onClick={handleLogout} style={{ 
+                  <a href="/api/auth/logout" onClick={handleLogout} style={{ 
                     padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', 
+                    textDecoration: 'none',
                     fontWeight: 600, fontSize: '0.875rem',
                     transition: 'background 0.2s'
                   }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,43,43,0.05)'}
                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     ↩ Keluar
-                  </Link>
+                  </a>
                 </div>
               </>
             )}

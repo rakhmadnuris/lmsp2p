@@ -16,8 +16,10 @@ export default function ProgressHeader({ currentStage, hasCertificate }: { curre
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Sertifikat_P2P.jpg';
+      a.download = 'Sertifikat_P2P.pdf';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch {
       alert('Terjadi kesalahan saat mengunduh sertifikat.');
