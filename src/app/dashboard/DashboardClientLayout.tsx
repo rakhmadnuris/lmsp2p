@@ -158,14 +158,15 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
                   overflow: 'hidden', minWidth: '160px', zIndex: 10,
                   boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
                 }}>
-                  <Link href="/dashboard/settings" onClick={() => setDropdownOpen(false)} style={{ 
+                  <a href="/dashboard/settings" onClick={() => setDropdownOpen(false)} style={{ 
                     padding: '0.75rem 1rem', display: 'block', color: 'var(--text-main)', 
+                    textDecoration: 'none',
                     fontSize: '0.875rem', borderBottom: '1px solid rgba(255,255,255,0.05)',
                     transition: 'background 0.2s'
                   }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} 
                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     👤 Pengaturan Profil
-                  </Link>
+                  </a>
                   <Link href="/api/auth/logout" onClick={handleLogout} style={{ 
                     padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', 
                     fontWeight: 600, fontSize: '0.875rem',

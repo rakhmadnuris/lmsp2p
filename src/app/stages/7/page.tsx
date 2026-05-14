@@ -82,7 +82,7 @@ export default function Stage7() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Sertifikat_P2P.jpg';
+      a.download = 'Sertifikat_P2P.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -107,7 +107,7 @@ export default function Stage7() {
           <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Anda telah berhasil menyelesaikan semua 7 tahap. Sertifikat Anda siap diunduh.</p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={handleDownloadCertificate} className="btn" disabled={downloading} style={{ padding: '0.75rem 1.5rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid var(--secondary)', color: 'var(--secondary)', fontWeight: 600 }}>
-              {downloading ? '⏳ Membuat...' : '📥 Unduh Sertifikat (.jpg)'}
+              {downloading ? '⏳ Membuat...' : '📥 Unduh Sertifikat (.pdf)'}
             </button>
             <button onClick={() => router.push('/dashboard')} className="btn btn-primary">Kembali ke Dashboard</button>
           </div>
