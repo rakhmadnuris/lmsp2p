@@ -3,11 +3,29 @@ import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import DashboardClientLayout from './DashboardClientLayout';
 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Dashboard | Ruang Belajar P2P',
+  description: 'Akses modul, ikuti tes, dan pantau kemajuan pembelajaran pengawas partisipatif.',
+};
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect('/login');
   
-  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+  const user = await prisma.user.findUnique({ 
+    where: { id: session.userId },
+    select: {
+      id: true,
+      username: true,
+      role: true,
+      currentStage: true,
+      stage3Unlocked: true,
+      stage5Unlocked: true,
+      stage6Unlocked: true,
+    }
+  });
   if (!user) redirect('/login');
 
   const { currentStage, stage3Unlocked, stage5Unlocked, stage6Unlocked } = user;

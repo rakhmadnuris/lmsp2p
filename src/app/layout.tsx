@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   description: 'Sistem Manajemen Pembelajaran Pendidikan Pengawas Partisipatif',
 };
 
+export const viewport = {
+  themeColor: '#0D0D0F',
+};
+
 export default function RootLayout({
   children,
 }: {
