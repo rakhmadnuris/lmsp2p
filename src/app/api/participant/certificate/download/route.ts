@@ -23,7 +23,6 @@ function formatDateIndonesian(dateStr: string): string {
   }
 }
 
-// Escape XML special characters for SVG text
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -36,7 +35,7 @@ function escapeXml(str: string): string {
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session) return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
 
     const cert = await prisma.certificate.findUnique({
       where: { userId: session.userId },
@@ -44,45 +43,32 @@ export async function GET() {
     });
 
     if (!cert) {
-      return NextResponse.json({ error: 'Certificate not found. Please complete Stage 7 first.' }, { status: 404 });
+      return NextResponse.json({ error: 'Sertifikat tidak ditemukan. Selesaikan Tahap 7 terlebih dahulu.' }, { status: 404 });
     }
 
     const formattedDate = formatDateIndonesian(cert.implementationDate);
     const regencyCity = cert.regencyCity || cert.user.regencyCity || '';
 
-    // ── Canvas dimensions (extracted PNG from DOCX template) ─────────────────
     const PNG_W = 2000;
     const PNG_H = 1414;
 
-    // ── Calculated positions from DOCX XML (EMU → pixels at 241 DPI) ─────────
-    // Page: 11909 x 8395 twips landscape; PNG: 2000 x 1414 px; DPI: ~241
-    // Font: 50 half-pts = 25pt → 84px; 20 half-pts = 10pt → 33px
-    //
-    // NAMA PESERTA: box V offset 1003935 EMU ≈ 266px from paragraph (margin top=243px)
-    //   → Y = 243 + 266 + 55 (box center) + 65 (visual adjustment) = 629
-    // JABATAN: box V offset 1758315 EMU ≈ 466px from paragraph
-    //   → Y = 243 + 466 + 55 + 30 = 794
-    // REGENCY/DATE: box V offset 2797810 EMU ≈ 742px from paragraph
-    //   → Y = 243 + 742 + 62 = 1047
+    const NAMA_Y  = 629;
+    const JAB_Y   = 794;
+    const LOC_Y   = 1047;
 
-    const NAMA_Y  = 629;  // name sits just above the underline
-    const JAB_Y   = 794;  // PESERTA sits below "SEBAGAI :"
-    const LOC_Y   = 1047; // location/date at bottom
+    const NAMA_FONT = 84;
+    const JAB_FONT  = 84;
+    const LOC_FONT  = 33;
 
-    const NAMA_FONT = 84;  // 25pt at 241 DPI
-    const JAB_FONT  = 84;  // 25pt at 241 DPI
-    const LOC_FONT  = 33;  // 10pt at 241 DPI
-
-    const CENTER_X     = 1000; // horizontal center of the page
-    const NAMA_CENTER_X = 1052; // slight offset from DOCX H anchor (-354330 EMU)
+    const CENTER_X      = 1000;
+    const NAMA_CENTER_X = 1052;
 
     const nameText     = escapeXml(cert.fullName);
     const roleText     = 'PESERTA';
     const locationText = escapeXml(`${regencyCity}, ${formattedDate}`);
 
-    // ── Build SVG text overlay ────────────────────────────────────────────────
     const svgOverlay = `<svg width="${PNG_W}" height="${PNG_H}" xmlns="http://www.w3.org/2000/svg">
-  <!-- Full Name: gold bold, centered on name line -->
+  <!-- Nama Lengkap -->
   <text
     x="${NAMA_CENTER_X}" y="${NAMA_Y}"
     font-size="${NAMA_FONT}"
@@ -92,7 +78,7 @@ export async function GET() {
     font-family="Arial, Helvetica, sans-serif"
   >${nameText}</text>
 
-  <!-- Role: PESERTA, gold bold, centered -->
+  <!-- Jabatan: PESERTA -->
   <text
     x="${CENTER_X}" y="${JAB_Y}"
     font-size="${JAB_FONT}"
@@ -102,7 +88,7 @@ export async function GET() {
     font-family="Arial, Helvetica, sans-serif"
   >${roleText}</text>
 
-  <!-- Location & Date: dark, normal weight, centered -->
+  <!-- Lokasi & Tanggal -->
   <text
     x="${CENTER_X}" y="${LOC_Y}"
     font-size="${LOC_FONT}"
@@ -113,17 +99,25 @@ export async function GET() {
   >${locationText}</text>
 </svg>`;
 
-    // ── Composite text onto background PNG and output as JPEG ─────────────────
     const bgPath = path.join(process.cwd(), 'public', 'cert_bg.png');
+
+    if (!fs.existsSync(bgPath)) {
+      return NextResponse.json({ error: 'Template sertifikat tidak ditemukan.' }, { status: 500 });
+    }
+
     const svgBuf = Buffer.from(svgOverlay);
 
     const jpgBuffer = await sharp(bgPath)
       .composite([{ input: svgBuf, top: 0, left: 0 }])
-      .jpeg({ quality: 95, mozjpeg: false })
+      .jpeg({ quality: 95 })
       .toBuffer();
 
-    const safeName = cert.fullName.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_');
-    const filename = `Sertifikat_${safeName}.jpg`;
+    // Nama file sesuai nama peserta
+    const safeName = cert.fullName
+      .replace(/[^a-zA-Z0-9 \u00C0-\u024F]/g, '')
+      .trim()
+      .replace(/\s+/g, '_');
+    const filename = `Sertifikat_P2P_${safeName}.jpg`;
 
     return new NextResponse(jpgBuffer as unknown as BodyInit, {
       headers: {
@@ -132,7 +126,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Certificate JPG error:', error);
-    return NextResponse.json({ error: 'Failed to generate certificate' }, { status: 500 });
+    console.error('Certificate error:', error);
+    return NextResponse.json({ error: 'Gagal membuat sertifikat' }, { status: 500 });
   }
 }

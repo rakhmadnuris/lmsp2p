@@ -8,6 +8,7 @@ export default function Stage2() {
   const [saving, setSaving] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
+  const [pdfError, setPdfError] = useState(false);
   
   const lastSavedNotesRef = useRef<string>('');
 
@@ -29,7 +30,6 @@ export default function Stage2() {
   useEffect(() => {
     if (initialLoad || isLocked) return;
     if (notes === lastSavedNotesRef.current) return;
-
     const timer = setTimeout(() => {
       fetch('/api/participant/auto-save', {
         method: 'POST',
@@ -37,9 +37,8 @@ export default function Stage2() {
         body: JSON.stringify({ stage: 2, data: { notes } })
       }).then(() => {
         lastSavedNotesRef.current = notes;
-      }).catch(err => console.error("Auto-save failed", err));
+      }).catch(err => console.error("Auto-save gagal", err));
     }, 1000);
-
     return () => clearTimeout(timer);
   }, [notes, initialLoad, isLocked]);
 
@@ -66,7 +65,7 @@ export default function Stage2() {
         alert('Gagal menyimpan kemajuan.');
       }
     } catch (err) {
-      alert('Error occurred.');
+      alert('Terjadi kesalahan.');
     } finally {
       setSaving(false);
     }
@@ -82,17 +81,41 @@ export default function Stage2() {
       </div>
 
       <div className="glass-panel" style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 1rem' }}>
-          <h2 style={{ fontSize: '1.25rem' }}>Module P2P SRIKANDI</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 0.5rem' }}>
+          <h2 style={{ fontSize: '1.25rem' }}>Modul P2P SRIKANDI</h2>
           <a href="/materials/module.pdf" download className="btn btn-primary" style={{ background: 'var(--secondary)', padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-            Unduh PDF
+            📥 Unduh PDF
           </a>
         </div>
         
-        {/* PDF Embedded Preview */}
-        <div style={{ width: '100%', height: '600px', borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--border)' }}>
-          <iframe src="/materials/module.pdf" width="100%" height="100%" style={{ border: 'none' }} title="E-Module Preview" />
-        </div>
+        {/* PDF Preview dengan fallback */}
+        {!pdfError ? (
+          <div style={{ width: '100%', height: '600px', borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--border)', position: 'relative' }}>
+            <iframe 
+              src="/materials/module.pdf#toolbar=1&navpanes=1&scrollbar=1" 
+              width="100%" 
+              height="100%" 
+              style={{ border: 'none' }} 
+              title="Preview E-Modul"
+              onError={() => setPdfError(true)}
+            />
+          </div>
+        ) : (
+          <div style={{ 
+            width: '100%', height: '200px', borderRadius: '0.5rem', 
+            border: '1px dashed var(--border)', display: 'flex', 
+            flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: '1rem', background: 'rgba(255,255,255,0.02)'
+          }}>
+            <span style={{ fontSize: '2rem' }}>📄</span>
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>
+              Preview tidak tersedia di browser ini.<br/>Silakan unduh PDF untuk membaca materi.
+            </p>
+            <a href="/materials/module.pdf" download className="btn btn-primary" style={{ padding: '0.5rem 1.5rem' }}>
+              📥 Unduh PDF
+            </a>
+          </div>
+        )}
       </div>
 
       <div className="glass-panel">

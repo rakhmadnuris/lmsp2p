@@ -11,6 +11,7 @@ export default function Stage7() {
   const [submitted, setSubmitted] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     fetch('/api/participant/progress')
@@ -68,8 +69,6 @@ export default function Stage7() {
     }
   };
 
-  const [downloading, setDownloading] = useState(false);
-
   const handleDownloadCertificate = async () => {
     setDownloading(true);
     try {
@@ -83,7 +82,7 @@ export default function Stage7() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Sertifikat_PSE.jpg';
+      a.download = 'Sertifikat_P2P.jpg';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -102,7 +101,7 @@ export default function Stage7() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <div className="glass-panel" style={{ textAlign: 'center', maxWidth: '500px' }}>
           <div style={{ width: '80px', height: '80px', margin: '0 auto 2rem', background: 'var(--secondary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>
           <h2 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Selamat!</h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Anda telah berhasil menyelesaikan semua 7 tahap. Sertifikat Anda siap diunduh.</p>
@@ -121,7 +120,6 @@ export default function Stage7() {
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Tahap 7: Data Sertifikat</h1>
-        {isLocked && <span style={{ padding: '0.5rem 1rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--secondary)', borderRadius: '0.5rem', fontWeight: 600 }}>Selesai</span>}
       </div>
       
       <div className="glass-panel">
@@ -131,11 +129,9 @@ export default function Stage7() {
           <strong> Catatan: Formulir ini hanya dapat dikirim satu kali.</strong>
         </p>
         
-        {!isLocked && (
-          <p style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: '2rem' }}>
-            Jawaban draf Anda disimpan otomatis.
-          </p>
-        )}
+        <p style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: '2rem' }}>
+          Jawaban draf Anda disimpan otomatis.
+        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
@@ -145,23 +141,20 @@ export default function Stage7() {
               className="input-field" 
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder={isLocked ? 'Data telah dikirim' : 'cth., Budi Santoso, S.Pd., M.Si.'}
+              placeholder="cth., Budi Santoso, S.Pd., M.Si."
               required 
-              disabled={isLocked}
-              style={{ opacity: isLocked ? 0.7 : 1 }}
             />
           </div>
           
+          {/* Hanya tanggal, tanpa waktu */}
           <div className="input-group">
-            <label className="input-label">Tanggal &amp; Waktu Implementasi</label>
+            <label className="input-label">Tanggal Implementasi</label>
             <input 
-              type="datetime-local" 
+              type="date" 
               className="input-field" 
               value={implementationDate}
               onChange={(e) => setImplementationDate(e.target.value)}
               required 
-              disabled={isLocked}
-              style={{ opacity: isLocked ? 0.7 : 1 }}
             />
           </div>
           
@@ -173,19 +166,14 @@ export default function Stage7() {
               value={regencyCity}
               onChange={(e) => setRegencyCity(e.target.value)}
               required 
-              disabled={isLocked}
-              style={{ opacity: isLocked ? 0.7 : 1 }}
-              placeholder={isLocked ? 'Data telah dikirim' : ''}
             />
           </div>
 
-          {!isLocked && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-              <button type="submit" className="btn btn-primary" disabled={saving || !fullName || !implementationDate || !regencyCity}>
-                {saving ? 'Mengirim...' : 'Kirim & Selesaikan Program'}
-              </button>
-            </div>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
+            <button type="submit" className="btn btn-primary" disabled={saving || !fullName || !implementationDate || !regencyCity}>
+              {saving ? 'Mengirim...' : 'Kirim & Selesaikan Program'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

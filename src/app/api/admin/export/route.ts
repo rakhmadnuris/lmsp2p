@@ -3,22 +3,22 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import ExcelJS from 'exceljs';
 
-const MATERIALS = [
-  'Material 1: Teknis Pencegahan Pelanggaran',
-  'Material 2: Teknis Pelaporan Dugaan Pelanggaran',
-  'Material 3: Teknis Penyelesaian Sengketa Proses',
-  'Material 4: Teknis Pengembangan Gerakan Pengawasan Partisipatif',
-  'Material 5: Teknis Penguatan Jaringan dan Pemberdayaan Komunitas',
-  'Material 6: Teknis Pengawasan Berbasis Digital',
+const MATERI = [
+  'Materi 1: Teknis Pencegahan Pelanggaran',
+  'Materi 2: Teknis Pelaporan Dugaan Pelanggaran',
+  'Materi 3: Teknis Penyelesaian Sengketa Proses',
+  'Materi 4: Teknis Pengembangan Gerakan Pengawasan Partisipatif',
+  'Materi 5: Teknis Penguatan Jaringan dan Pemberdayaan Komunitas',
+  'Materi 6: Teknis Pengawasan Berbasis Digital',
 ];
 
 export async function GET(request: Request) {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session) return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
 
     const admin = await prisma.user.findUnique({ where: { id: session.userId } });
-    if (!admin || admin.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!admin || admin.role !== 'ADMIN') return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
 
     const { searchParams } = new URL(request.url);
     const filterProvince = searchParams.get('province') || '';
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     if (filterProvince) where.province = filterProvince;
     if (filterCity) where.regencyCity = filterCity;
 
-    const participants = await prisma.user.findMany({
+    const peserta = await prisma.user.findMany({
       where,
       select: {
         username: true,
@@ -44,63 +44,63 @@ export async function GET(request: Request) {
 
     const workbook = new ExcelJS.Workbook();
 
-    // --- Sheet 1: Summary ---
-    const summarySheet = workbook.addWorksheet('Summary');
-    summarySheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Gender', key: 'gender', width: 10 },
-      { header: 'Province', key: 'province', width: 25 },
-      { header: 'Regency/City', key: 'regencyCity', width: 25 },
-      { header: 'Current Stage', key: 'currentStage', width: 15 },
-      { header: 'Pre-Test Score', key: 'stage3Score', width: 15 },
-      { header: 'Post-Test Score', key: 'stage6Score', width: 15 },
+    // ── Sheet 1: Ringkasan ──
+    const sheetRingkasan = workbook.addWorksheet('Ringkasan');
+    sheetRingkasan.columns = [
+      { header: 'Nama Pengguna', key: 'username', width: 22 },
+      { header: 'Jenis Kelamin', key: 'gender', width: 15 },
+      { header: 'Provinsi', key: 'province', width: 25 },
+      { header: 'Kabupaten/Kota', key: 'regencyCity', width: 25 },
+      { header: 'Tahap Saat Ini', key: 'currentStage', width: 15 },
+      { header: 'Nilai Pre-Test', key: 'stage3Score', width: 15 },
+      { header: 'Nilai Post-Test', key: 'stage6Score', width: 15 },
     ];
-    styleHeader(summarySheet);
-    participants.forEach((p: any) => {
-      summarySheet.addRow({
+    styleHeader(sheetRingkasan);
+    peserta.forEach((p: any) => {
+      sheetRingkasan.addRow({
         username: p.username,
-        gender: p.gender || '-',
+        gender: p.gender === 'male' ? 'Laki-laki' : p.gender === 'female' ? 'Perempuan' : (p.gender || '-'),
         province: p.province || '-',
         regencyCity: p.regencyCity || '-',
-        currentStage: p.currentStage,
+        currentStage: `Tahap ${p.currentStage}`,
         stage3Score: p.progress?.stage3Score ?? '-',
         stage6Score: p.progress?.stage6Score ?? '-',
       });
     });
 
-    // --- Sheet 2: Stage 1 Notes (separate columns per material) ---
-    const s1Sheet = workbook.addWorksheet('Stage 1 Notes');
-    s1Sheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Province', key: 'province', width: 22 },
-      { header: 'Regency/City', key: 'regencyCity', width: 22 },
-      ...MATERIALS.map((m, i) => ({ header: m, key: `mat${i}`, width: 40 }))
+    // ── Sheet 2: Catatan Tahap 1 ──
+    const sheetTahap1 = workbook.addWorksheet('Catatan Tahap 1');
+    sheetTahap1.columns = [
+      { header: 'Nama Pengguna', key: 'username', width: 22 },
+      { header: 'Provinsi', key: 'province', width: 22 },
+      { header: 'Kabupaten/Kota', key: 'regencyCity', width: 22 },
+      ...MATERI.map((m, i) => ({ header: m, key: `mat${i}`, width: 45 }))
     ];
-    styleHeader(s1Sheet);
-    participants.forEach((p: any) => {
-      let notesArr = Array(6).fill('');
+    styleHeader(sheetTahap1);
+    peserta.forEach((p: any) => {
+      let catatanArr = Array(6).fill('');
       if (p.progress?.stage1Notes) {
         try {
           const parsed = JSON.parse(p.progress.stage1Notes);
-          if (Array.isArray(parsed)) notesArr = parsed;
+          if (Array.isArray(parsed)) catatanArr = parsed;
         } catch {}
       }
       const row: any = { username: p.username, province: p.province || '-', regencyCity: p.regencyCity || '-' };
-      notesArr.forEach((n: string, i: number) => { row[`mat${i}`] = n || '-'; });
-      s1Sheet.addRow(row);
+      catatanArr.forEach((n: string, i: number) => { row[`mat${i}`] = n || '-'; });
+      sheetTahap1.addRow(row);
     });
 
-    // --- Sheet 3: Stage 2 Notes ---
-    const s2Sheet = workbook.addWorksheet('Stage 2 Notes');
-    s2Sheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Province', key: 'province', width: 22 },
-      { header: 'Regency/City', key: 'regencyCity', width: 22 },
-      { header: 'Stage 2 Notes', key: 'notes', width: 60 },
+    // ── Sheet 3: Catatan Tahap 2 ──
+    const sheetTahap2 = workbook.addWorksheet('Catatan Tahap 2');
+    sheetTahap2.columns = [
+      { header: 'Nama Pengguna', key: 'username', width: 22 },
+      { header: 'Provinsi', key: 'province', width: 22 },
+      { header: 'Kabupaten/Kota', key: 'regencyCity', width: 22 },
+      { header: 'Catatan E-Modul', key: 'notes', width: 60 },
     ];
-    styleHeader(s2Sheet);
-    participants.forEach((p: any) => {
-      s2Sheet.addRow({
+    styleHeader(sheetTahap2);
+    peserta.forEach((p: any) => {
+      sheetTahap2.addRow({
         username: p.username,
         province: p.province || '-',
         regencyCity: p.regencyCity || '-',
@@ -108,17 +108,17 @@ export async function GET(request: Request) {
       });
     });
 
-    // --- Sheet 4: Stage 3 Scores ---
-    const s3Sheet = workbook.addWorksheet('Stage 3 Pre-Test');
-    s3Sheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Province', key: 'province', width: 22 },
-      { header: 'Regency/City', key: 'regencyCity', width: 22 },
-      { header: 'Pre-Test Score', key: 'score', width: 15 },
+    // ── Sheet 4: Nilai Pre-Test (Tahap 3) ──
+    const sheetPreTest = workbook.addWorksheet('Nilai Pre-Test');
+    sheetPreTest.columns = [
+      { header: 'Nama Pengguna', key: 'username', width: 22 },
+      { header: 'Provinsi', key: 'province', width: 22 },
+      { header: 'Kabupaten/Kota', key: 'regencyCity', width: 22 },
+      { header: 'Nilai Pre-Test', key: 'score', width: 15 },
     ];
-    styleHeader(s3Sheet);
-    participants.forEach((p: any) => {
-      s3Sheet.addRow({
+    styleHeader(sheetPreTest);
+    peserta.forEach((p: any) => {
+      sheetPreTest.addRow({
         username: p.username,
         province: p.province || '-',
         regencyCity: p.regencyCity || '-',
@@ -126,45 +126,45 @@ export async function GET(request: Request) {
       });
     });
 
-    // --- Sheet 5: Stage 5 Follow-Up (separate columns) ---
-    const s5Sheet = workbook.addWorksheet('Stage 5 Follow-Up');
-    s5Sheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Province', key: 'province', width: 22 },
-      { header: 'Regency/City', key: 'regencyCity', width: 22 },
-      { header: 'Program Name', key: 'programName', width: 35 },
-      { header: 'Time & Date', key: 'timeAndDate', width: 25 },
-      { header: 'Program Method', key: 'programMethod', width: 30 },
-      { header: 'Step', key: 'step', width: 50 },
+    // ── Sheet 5: Rencana Tindak Lanjut (Tahap 5) ──
+    const sheetRTL = workbook.addWorksheet('Rencana Tindak Lanjut');
+    sheetRTL.columns = [
+      { header: 'Nama Pengguna', key: 'username', width: 22 },
+      { header: 'Provinsi', key: 'province', width: 22 },
+      { header: 'Kabupaten/Kota', key: 'regencyCity', width: 22 },
+      { header: 'Nama Program', key: 'programName', width: 35 },
+      { header: 'Tanggal & Waktu', key: 'timeAndDate', width: 25 },
+      { header: 'Metode Program', key: 'programMethod', width: 30 },
+      { header: 'Langkah-Langkah', key: 'step', width: 55 },
     ];
-    styleHeader(s5Sheet);
-    participants.forEach((p: any) => {
-      let plan: any = {};
+    styleHeader(sheetRTL);
+    peserta.forEach((p: any) => {
+      let rencana: any = {};
       if (p.progress?.stage5Plan) {
-        try { plan = JSON.parse(p.progress.stage5Plan); } catch {}
+        try { rencana = JSON.parse(p.progress.stage5Plan); } catch {}
       }
-      s5Sheet.addRow({
+      sheetRTL.addRow({
         username: p.username,
         province: p.province || '-',
         regencyCity: p.regencyCity || '-',
-        programName: plan.programName || '-',
-        timeAndDate: plan.timeAndDate || '-',
-        programMethod: plan.programMethod || '-',
-        step: plan.step || '-',
+        programName: rencana.programName || '-',
+        timeAndDate: rencana.timeAndDate || '-',
+        programMethod: rencana.programMethod || '-',
+        step: rencana.step || '-',
       });
     });
 
-    // --- Sheet 6: Stage 6 Scores ---
-    const s6Sheet = workbook.addWorksheet('Stage 6 Post-Test');
-    s6Sheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Province', key: 'province', width: 22 },
-      { header: 'Regency/City', key: 'regencyCity', width: 22 },
-      { header: 'Post-Test Score', key: 'score', width: 15 },
+    // ── Sheet 6: Nilai Post-Test (Tahap 6) ──
+    const sheetPostTest = workbook.addWorksheet('Nilai Post-Test');
+    sheetPostTest.columns = [
+      { header: 'Nama Pengguna', key: 'username', width: 22 },
+      { header: 'Provinsi', key: 'province', width: 22 },
+      { header: 'Kabupaten/Kota', key: 'regencyCity', width: 22 },
+      { header: 'Nilai Post-Test', key: 'score', width: 15 },
     ];
-    styleHeader(s6Sheet);
-    participants.forEach((p: any) => {
-      s6Sheet.addRow({
+    styleHeader(sheetPostTest);
+    peserta.forEach((p: any) => {
+      sheetPostTest.addRow({
         username: p.username,
         province: p.province || '-',
         regencyCity: p.regencyCity || '-',
@@ -172,19 +172,19 @@ export async function GET(request: Request) {
       });
     });
 
-    // --- Sheet 7: Stage 7 Certificate ---
-    const s7Sheet = workbook.addWorksheet('Stage 7 Certificate');
-    s7Sheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Province', key: 'province', width: 22 },
-      { header: 'Regency/City', key: 'regencyCity', width: 22 },
-      { header: 'Full Name', key: 'fullName', width: 30 },
-      { header: 'Implementation Date', key: 'implDate', width: 25 },
-      { header: 'Certificate City', key: 'certCity', width: 22 },
+    // ── Sheet 7: Data Sertifikat (Tahap 7) ──
+    const sheetSertifikat = workbook.addWorksheet('Data Sertifikat');
+    sheetSertifikat.columns = [
+      { header: 'Nama Pengguna', key: 'username', width: 22 },
+      { header: 'Provinsi', key: 'province', width: 22 },
+      { header: 'Kabupaten/Kota', key: 'regencyCity', width: 22 },
+      { header: 'Nama Lengkap', key: 'fullName', width: 35 },
+      { header: 'Tanggal Implementasi', key: 'implDate', width: 25 },
+      { header: 'Kota Sertifikat', key: 'certCity', width: 22 },
     ];
-    styleHeader(s7Sheet);
-    participants.forEach((p: any) => {
-      s7Sheet.addRow({
+    styleHeader(sheetSertifikat);
+    peserta.forEach((p: any) => {
+      sheetSertifikat.addRow({
         username: p.username,
         province: p.province || '-',
         regencyCity: p.regencyCity || '-',
@@ -195,16 +195,17 @@ export async function GET(request: Request) {
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
+    const tanggal = new Date().toISOString().slice(0, 10);
 
     return new NextResponse(buffer as any, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="PSE_Recap_${new Date().toISOString().slice(0, 10)}.xlsx"`,
+        'Content-Disposition': `attachment; filename="Rekap_P2P_${tanggal}.xlsx"`,
       },
     });
   } catch (error) {
     console.error('Export error:', error);
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Ekspor gagal' }, { status: 500 });
   }
 }
 
