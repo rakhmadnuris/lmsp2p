@@ -6,5 +6,5 @@ export async function GET(request: Request) {
   const redirectUrl = searchParams.get('redirect') || '/';
   
   (await cookies()).delete('session');
-  return NextResponse.redirect(new URL(redirectUrl, process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'));
+  return NextResponse.redirect(new URL(redirectUrl, request.url));
 }
