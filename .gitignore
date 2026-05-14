@@ -5,3 +5,15 @@ node_modules
 out/
 build/
 .vercel/
+# Build
+.next/
+out/
+
+# Test files
+test_cert.*
+parse*.js
+inspect_cert.js
+
+# Local
+*.bat
+*.db
