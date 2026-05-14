@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import BackButtonHandler from '../dashboard/BackButtonHandler';
 
 export default function StagesLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -13,7 +12,6 @@ export default function StagesLayout({ children }: { children: React.ReactNode }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <BackButtonHandler />
       <header style={{ padding: '1rem 2rem', background: 'var(--surface)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ color: 'var(--primary)', fontSize: '1.25rem' }}>Tahap Pembelajaran {currentStageNum}</h2>
         <div style={{ display: 'flex', gap: '1rem' }}>

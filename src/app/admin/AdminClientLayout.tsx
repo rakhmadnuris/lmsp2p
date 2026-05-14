@@ -12,7 +12,7 @@ export default function AdminClientLayout({ user, children }: any) {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     if (window.confirm('Apakah Anda yakin ingin keluar dari akun administrator?')) {
-      window.location.href = '/api/auth/logout';
+      window.location.href = '/api/auth/logout?redirect=/admin/login';
     }
   };
 
@@ -143,7 +143,7 @@ export default function AdminClientLayout({ user, children }: any) {
                   overflow: 'hidden', minWidth: '160px', zIndex: 10,
                   boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
                 }}>
-                  <Link href="/api/auth/logout" onClick={handleLogout} style={{ padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', fontWeight: 600, fontSize: '0.875rem' }}>
+                  <Link href="/api/auth/logout?redirect=/admin/login" onClick={handleLogout} style={{ padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', fontWeight: 600, fontSize: '0.875rem' }}>
                     ↩ Keluar
                   </Link>
                 </div>

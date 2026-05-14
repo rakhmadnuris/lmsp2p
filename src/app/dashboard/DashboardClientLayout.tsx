@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import BackButtonHandler from './BackButtonHandler';
 
 export default function DashboardClientLayout({ user, stages, children }: any) {
   const router = useRouter();
@@ -28,8 +27,6 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', overflowX: 'hidden', background: 'var(--bg-color)' }}>
-      <BackButtonHandler />
-      
       {/* ── Sidebar ── */}
       <aside style={{
         width: '260px',

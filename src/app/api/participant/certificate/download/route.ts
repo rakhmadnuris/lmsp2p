@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import fs from 'fs';
 import path from 'path';
-import sharp from 'sharp';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 const MONTH_NAMES = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -23,15 +23,6 @@ function formatDateIndonesian(dateStr: string): string {
   }
 }
 
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
 export async function GET() {
   try {
     const session = await getSession();
@@ -49,79 +40,81 @@ export async function GET() {
     const formattedDate = formatDateIndonesian(cert.implementationDate);
     const regencyCity = cert.regencyCity || cert.user.regencyCity || '';
 
-    const PNG_W = 2000;
-    const PNG_H = 1414;
-
-    const NAMA_Y  = 629;
-    const JAB_Y   = 794;
-    const LOC_Y   = 1047;
-
-    const NAMA_FONT = 84;
-    const JAB_FONT  = 84;
-    const LOC_FONT  = 33;
-
-    const CENTER_X      = 1000;
-    const NAMA_CENTER_X = 1052;
-
-    const nameText     = escapeXml(cert.fullName);
-    const roleText     = 'PESERTA';
-    const locationText = escapeXml(`${regencyCity}, ${formattedDate}`);
-
-    const svgOverlay = `<svg width="${PNG_W}" height="${PNG_H}" xmlns="http://www.w3.org/2000/svg">
-  <!-- Nama Lengkap -->
-  <text
-    x="${NAMA_CENTER_X}" y="${NAMA_Y}"
-    font-size="${NAMA_FONT}"
-    fill="#FFC000"
-    text-anchor="middle"
-    font-weight="bold"
-    font-family="Arial, Helvetica, sans-serif"
-  >${nameText}</text>
-
-  <!-- Jabatan: PESERTA -->
-  <text
-    x="${CENTER_X}" y="${JAB_Y}"
-    font-size="${JAB_FONT}"
-    fill="#FFC000"
-    text-anchor="middle"
-    font-weight="bold"
-    font-family="Arial, Helvetica, sans-serif"
-  >${roleText}</text>
-
-  <!-- Lokasi & Tanggal -->
-  <text
-    x="${CENTER_X}" y="${LOC_Y}"
-    font-size="${LOC_FONT}"
-    fill="#1a1a1a"
-    text-anchor="middle"
-    font-weight="bold"
-    font-family="Arial, Helvetica, sans-serif"
-  >${locationText}</text>
-</svg>`;
+    const nameText = cert.fullName;
+    const roleText = 'PESERTA';
+    const locationText = `${regencyCity}, ${formattedDate}`;
 
     const bgPath = path.join(process.cwd(), 'public', 'cert_bg.png');
-
     if (!fs.existsSync(bgPath)) {
-      return NextResponse.json({ error: 'Template sertifikat tidak ditemukan.' }, { status: 500 });
+      return NextResponse.json({ error: 'Template sertifikat (cert_bg.png) tidak ditemukan di folder public.' }, { status: 500 });
     }
 
-    const svgBuf = Buffer.from(svgOverlay);
+    const bgImageBytes = fs.readFileSync(bgPath);
 
-    const jpgBuffer = await sharp(bgPath)
-      .composite([{ input: svgBuf, top: 0, left: 0 }])
-      .jpeg({ quality: 95 })
-      .toBuffer();
+    // Create PDF
+    const pdfDoc = await PDFDocument.create();
+    const image = await pdfDoc.embedPng(bgImageBytes);
+    
+    // Create page with same dimensions as image
+    const { width, height } = image.scale(1);
+    const page = pdfDoc.addPage([width, height]);
+    page.drawImage(image, { x: 0, y: 0, width, height });
 
-    // Nama file sesuai nama peserta
-    const safeName = cert.fullName
-      .replace(/[^a-zA-Z0-9 \u00C0-\u024F]/g, '')
-      .trim()
-      .replace(/\s+/g, '_');
-    const filename = `Sertifikat_P2P_${safeName}.jpg`;
+    // Embed font
+    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    return new NextResponse(jpgBuffer as unknown as BodyInit, {
+    const NAMA_FONT = 84;
+    const JAB_FONT = 84;
+    const LOC_FONT = 33;
+
+    // PDF coordinates are from BOTTOM-LEFT
+    // Original SVG Y coords were from TOP-LEFT. 
+    // Y_pdf = height - Y_svg
+    const NAMA_Y_PDF = height - 629;
+    const JAB_Y_PDF = height - 794;
+    const LOC_Y_PDF = height - 1047;
+
+    // Calculate text widths for centering
+    const nameWidth = font.widthOfTextAtSize(nameText, NAMA_FONT);
+    const roleWidth = font.widthOfTextAtSize(roleText, JAB_FONT);
+    const locWidth = font.widthOfTextAtSize(locationText, LOC_FONT);
+
+    // Color: #FFC000 = rgb(255/255, 192/255, 0)
+    const goldColor = rgb(1, 192/255, 0);
+    const blackColor = rgb(26/255, 26/255, 26/255);
+
+    page.drawText(nameText, {
+      x: 1052 - (nameWidth / 2),
+      y: NAMA_Y_PDF,
+      size: NAMA_FONT,
+      font: font,
+      color: goldColor,
+    });
+
+    page.drawText(roleText, {
+      x: 1000 - (roleWidth / 2),
+      y: JAB_Y_PDF,
+      size: JAB_FONT,
+      font: font,
+      color: goldColor,
+    });
+
+    page.drawText(locationText, {
+      x: 1000 - (locWidth / 2),
+      y: LOC_Y_PDF,
+      size: LOC_FONT,
+      font: font,
+      color: blackColor,
+    });
+
+    const pdfBytes = await pdfDoc.save();
+
+    const safeName = cert.fullName.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+    const filename = `Sertifikat_P2P_${safeName}.pdf`;
+
+    return new NextResponse(pdfBytes as unknown as BodyInit, {
       headers: {
-        'Content-Type': 'image/jpeg',
+        'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });

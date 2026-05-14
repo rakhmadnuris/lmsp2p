@@ -19,6 +19,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Redirect logged-in users away from login pages
+  if (pathname === '/' || pathname === '/login' || pathname === '/admin/login') {
+    if (sessionCookie) {
+      try {
+        const payload = await decrypt(sessionCookie);
+        if (payload.role === 'ADMIN') return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+        if (payload.role === 'PARTICIPANT') return NextResponse.redirect(new URL('/dashboard', request.url));
+      } catch (e) {
+        // invalid session, just let them see the login page
+      }
+    }
+  }
+
   // Protect Participant routes
   if (pathname.startsWith('/stages') || pathname.startsWith('/dashboard')) {
     if (!sessionCookie) return NextResponse.redirect(new URL('/login', request.url));
@@ -45,5 +58,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/stages/:path*', '/dashboard/:path*'],
+  matcher: ['/', '/login', '/admin/login', '/admin/:path*', '/stages/:path*', '/dashboard/:path*'],
 };
