@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const { stage, data } = await request.json();
     const userId = session.userId;
 
-    let progressUpdate = {};
+    let progressUpdate: any = {};
     
     if (stage === 1) progressUpdate = { stage1Notes: data.notes, stage1Done: true };
     if (stage === 2) progressUpdate = { stage2Notes: data.notes, stage2Done: true };
@@ -44,9 +44,11 @@ export async function POST(request: Request) {
     if (stage === 5) progressUpdate = { stage5Plan: data.plan, stage5Done: true };
     if (stage === 6) progressUpdate = { stage6Score: data.score, stage6Done: true };
 
-    await prisma.participantProgress.update({
+    // Pakai upsert agar tidak error kalau progress belum ada
+    await prisma.participantProgress.upsert({
       where: { userId },
-      data: progressUpdate
+      update: progressUpdate,
+      create: { userId, ...progressUpdate }
     });
 
     // Advance user stage
@@ -63,6 +65,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, nextStage, isNextStageLocked });
   } catch (error) {
+    console.error('Progress update error:', error);
     return NextResponse.json({ error: 'Failed to save progress' }, { status: 500 });
   }
 }

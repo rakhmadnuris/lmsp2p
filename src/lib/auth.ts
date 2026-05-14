@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const secretKey = 'super-secret-key-change-in-production';
+const secretKey = process.env.JWT_SECRET || 'super-secret-key-change-in-production';
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {

@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect Participant routes
-  if (pathname.startsWith('/stages') || pathname === '/dashboard') {
+  if (pathname.startsWith('/stages') || pathname.startsWith('/dashboard')) {
     if (!sessionCookie) return NextResponse.redirect(new URL('/login', request.url));
     try {
       const payload = await decrypt(sessionCookie);
@@ -34,8 +34,8 @@ export async function middleware(request: NextRequest) {
 
   const response = NextResponse.next();
   
-  // Prevent caching for protected routes to ensure session validation on back/forward
-  if (pathname.startsWith('/admin') || pathname.startsWith('/stages') || pathname === '/dashboard') {
+  // Prevent caching for protected routes
+  if (pathname.startsWith('/admin') || pathname.startsWith('/stages') || pathname.startsWith('/dashboard')) {
     response.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
@@ -45,5 +45,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/stages/:path*', '/dashboard'],
+  matcher: ['/admin/:path*', '/stages/:path*', '/dashboard/:path*'],
 };
