@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  username       String   @unique
+  passwordHash   String
+  role           String   // 'ADMIN' or 'PARTICIPANT'
+  province       String?
+  regencyCity    String?
+  gender         String?
+  avatar         String?
+  currentStage   Int      @default(1)
+  
+  // Progress states unlocked by Admin
+  stage3Unlocked Boolean  @default(false)
+  stage5Unlocked Boolean  @default(false)
+  stage6Unlocked Boolean  @default(false)
+
+  // Submissions and Data
+  progress       ParticipantProgress?
+  certificate    Certificate?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ParticipantProgress {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Stage 1
+  stage1Notes    String?
+  stage1Done     Boolean  @default(false)
+
+  // Stage 2
+  stage2Notes    String?
+  stage2Done     Boolean  @default(false)
+
+  // Stage 3 (Pre-Test)
+  stage3Score    Int?
+  stage3Done     Boolean  @default(false)
+
+  // Stage 4 (Discussion)
+  stage4Done     Boolean  @default(false)
+
+  // Stage 5 (Follow-Up Plan)
+  stage5Plan     String?
+  stage5Done     Boolean  @default(false)
+
+  // Stage 6 (Post-Test)
+  stage6Score    Int?
+  stage6Done     Boolean  @default(false)
+
+  updatedAt      DateTime @updatedAt
+}
+
+model Certificate {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fullName         String
+  implementationDate String
+  regencyCity      String
+
+  createdAt        DateTime @default(now())
+}

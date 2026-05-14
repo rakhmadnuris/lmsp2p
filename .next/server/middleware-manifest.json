@@ -1,0 +1,40 @@
+{
+  "version": 3,
+  "middleware": {
+    "/": {
+      "files": [
+        "server/edge-runtime-webpack.js",
+        "server/src/middleware.js"
+      ],
+      "name": "src/middleware",
+      "page": "/",
+      "matchers": [
+        {
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?\\/admin(?:\\/((?:[^\\/#\\?]+?)(?:\\/(?:[^\\/#\\?]+?))*))?(.json)?[\\/#\\?]?$",
+          "originalSource": "/admin/:path*"
+        },
+        {
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?\\/stages(?:\\/((?:[^\\/#\\?]+?)(?:\\/(?:[^\\/#\\?]+?))*))?(.json)?[\\/#\\?]?$",
+          "originalSource": "/stages/:path*"
+        },
+        {
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?\\/dashboard(.json)?[\\/#\\?]?$",
+          "originalSource": "/dashboard"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "3LGV2buWeJURKJ3yG-XH-",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "whXSN/+Qq5buQGUqRj0zWvwxMDwG80vyhTjgdfmq1DA=",
+        "__NEXT_PREVIEW_MODE_ID": "651d88f4be39ed437258dcbc4bade26d",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "6b3a23a2413e2364c040e675e86bd475da1c622cd795e6f9cec8132ae75ec513",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "d9c67d7b193be0215c2c04bee63491bd06b60b42b9014eef998ea6080dff7e80"
+      }
+    }
+  },
+  "functions": {},
+  "sortedMiddleware": [
+    "/"
+  ]
+}
