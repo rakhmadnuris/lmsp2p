@@ -23,7 +23,7 @@ export default function ParticipantLogin() {
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.role !== 'PARTICIPANT') {
+        if (data.role === 'ADMIN') {
           setError('Tipe akun tidak valid. Gunakan portal login Admin.');
         } else {
           router.push(data.redirectUrl);

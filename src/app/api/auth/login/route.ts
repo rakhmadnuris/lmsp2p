@@ -42,7 +42,10 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 // 1 day
     });
 
-    const redirectUrl = user.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard';
+    let redirectUrl = '/dashboard';
+    if (user.role === 'ADMIN') redirectUrl = '/admin/dashboard';
+    else if (user.role === 'PIC_PROVINSI') redirectUrl = '/pic-provinsi/dashboard';
+    else if (user.role === 'PIC_KABKOTA') redirectUrl = '/pic-kabkota/dashboard';
     
     return NextResponse.json({ success: true, role: user.role, redirectUrl });
   } catch (error) {

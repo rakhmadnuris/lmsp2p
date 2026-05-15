@@ -74,3 +74,13 @@ model Certificate {
 
   createdAt        DateTime @default(now())
 }
+
+model DiscussionSession {
+  id            String   @id @default(uuid())
+  province      String
+  regencyCity   String
+  date          String
+  updatedAt     DateTime @updatedAt
+
+  @@unique([province, regencyCity])
+}

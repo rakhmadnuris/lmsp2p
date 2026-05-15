@@ -7,16 +7,20 @@ export default function Stage4() {
   const [saving, setSaving] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [discussionDate, setDiscussionDate] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/participant/progress')
-      .then(res => res.json())
-      .then(data => {
-        if (data.currentStage > 4) {
-          setIsLocked(true);
-        }
-      })
-      .finally(() => setInitialLoad(false));
+    Promise.all([
+      fetch('/api/participant/progress').then(res => res.json()),
+      fetch('/api/participant/discussion').then(res => res.json())
+    ]).then(([progressData, discussionData]) => {
+      if (progressData.currentStage > 4) {
+        setIsLocked(true);
+      }
+      if (discussionData.date) {
+        setDiscussionDate(discussionData.date);
+      }
+    }).finally(() => setInitialLoad(false));
   }, []);
 
   const handleNext = async () => {
@@ -63,7 +67,7 @@ export default function Stage4() {
           </div>
           <div>
             <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.875rem' }}>Tanggal &amp; Waktu</strong>
-            <span>Jumat, 15 Mei 2026 - 10:00 (WIB)</span>
+            <span>{discussionDate ? new Date(discussionDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Belum diatur. Menunggu jadwal dari PIC Kab/Kota.'}</span>
           </div>
           <div>
             <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.875rem' }}>Tautan Meeting</strong>
