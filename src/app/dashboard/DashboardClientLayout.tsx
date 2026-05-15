@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import BackButtonHandler from './BackButtonHandler';
 
 export default function DashboardClientLayout({ user, stages, children }: any) {
   const router = useRouter();
@@ -10,7 +11,6 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Prevent browser caching of dashboard pages
     const meta = document.createElement('meta');
     meta.httpEquiv = 'Cache-Control';
     meta.content = 'no-cache, no-store, must-revalidate';
@@ -18,8 +18,7 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
     return () => { document.head.removeChild(meta); };
   }, []);
 
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleLogout = () => {
     if (window.confirm('Apakah Anda yakin ingin keluar dari akun?')) {
       window.location.href = '/api/auth/logout';
     }
@@ -27,23 +26,22 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', overflowX: 'hidden', background: 'var(--bg-color)' }}>
+      <BackButtonHandler />
+      
       {/* ── Sidebar ── */}
       <aside style={{
         width: '260px',
         background: 'rgba(255,255,255,0.03)',
         backdropFilter: 'blur(20px)',
         borderRight: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'flex', flexDirection: 'column',
         transition: 'transform 0.3s ease, margin-left 0.3s ease',
         transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         marginLeft: isSidebarOpen ? '0' : '-260px',
         flexShrink: 0,
       }}>
-        {/* Red-gold accent bar */}
         <div style={{ height: '3px', background: 'linear-gradient(90deg, var(--primary), var(--secondary))' }} />
 
-        {/* Brand */}
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--secondary)', marginBottom: '0.2rem' }}>
             P2P 2026
@@ -51,9 +49,7 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
           <h2 style={{ color: 'var(--text-main)', fontWeight: 800, fontSize: '1.1rem' }}>Ruang Belajar</h2>
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', overflowY: 'auto' }}>
-          {/* Dashboard link */}
           <Link href="/dashboard" style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem',
             padding: '0.65rem 1rem', borderRadius: '0.75rem',
@@ -120,8 +116,9 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
           position: 'sticky', top: 0, zIndex: 10,
         }}>
           <button onClick={() => setSidebarOpen(!isSidebarOpen)} style={{
-            padding: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center',
+            padding: '0.5rem', background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.5rem',
+            cursor: 'pointer', display: 'flex', alignItems: 'center',
           }}>
             <svg width="20" height="20" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="10" x2="21" y2="10" /><line x1="3" y1="5" x2="21" y2="5" /><line x1="3" y1="15" x2="21" y2="15" />
@@ -138,11 +135,15 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
             }}>
               <div style={{
                 width: '32px', height: '32px', borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                background: user?.avatar ? 'transparent' : 'linear-gradient(135deg, var(--primary), var(--secondary))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontWeight: 700, fontSize: '0.85rem',
+                overflow: 'hidden',
               }}>
-                {user?.username?.[0]?.toUpperCase() || 'P'}
+                {user?.avatar
+                  ? <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : user?.username?.[0]?.toUpperCase() || 'P'
+                }
               </div>
               <span style={{ fontWeight: 500, color: 'var(--text-main)', fontSize: '0.9rem' }}>{user.username}</span>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s' }}>▼</span>
@@ -158,24 +159,29 @@ export default function DashboardClientLayout({ user, stages, children }: any) {
                   overflow: 'hidden', minWidth: '160px', zIndex: 10,
                   boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
                 }}>
-                  <a href="/dashboard/settings" onClick={() => setDropdownOpen(false)} style={{ 
-                    padding: '0.75rem 1rem', display: 'block', color: 'var(--text-main)', 
-                    textDecoration: 'none',
-                    fontSize: '0.875rem', borderBottom: '1px solid rgba(255,255,255,0.05)',
-                    transition: 'background 0.2s'
-                  }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} 
-                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                  {/* Pakai Link biasa untuk settings, bukan logout */}
+                  <Link
+                    href="/dashboard/settings"
+                    onClick={() => setDropdownOpen(false)}
+                    style={{
+                      padding: '0.75rem 1rem', display: 'block', color: 'var(--text-main)',
+                      fontSize: '0.875rem', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      textDecoration: 'none',
+                    }}
+                  >
                     👤 Pengaturan Profil
-                  </a>
-                  <a href="/api/auth/logout" onClick={handleLogout} style={{ 
-                    padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', 
-                    textDecoration: 'none',
-                    fontWeight: 600, fontSize: '0.875rem',
-                    transition: 'background 0.2s'
-                  }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,43,43,0.05)'}
-                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                  </Link>
+                  {/* Pakai button untuk logout agar tidak navigate langsung */}
+                  <button
+                    onClick={() => { setDropdownOpen(false); handleLogout(); }}
+                    style={{
+                      padding: '0.75rem 1rem', display: 'block', width: '100%', textAlign: 'left',
+                      color: 'var(--error)', fontWeight: 600, fontSize: '0.875rem',
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                    }}
+                  >
                     ↩ Keluar
-                  </a>
+                  </button>
                 </div>
               </>
             )}

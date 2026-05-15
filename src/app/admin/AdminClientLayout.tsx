@@ -1,18 +1,16 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export default function AdminClientLayout({ user, children }: any) {
-  const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const pathname = usePathname();
 
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleLogout = () => {
     if (window.confirm('Apakah Anda yakin ingin keluar dari akun administrator?')) {
-      window.location.href = '/api/auth/logout?redirect=/admin/login';
+      window.location.href = '/api/auth/logout';
     }
   };
 
@@ -33,38 +31,30 @@ export default function AdminClientLayout({ user, children }: any) {
         background: 'rgba(255,255,255,0.03)',
         backdropFilter: 'blur(20px)',
         borderRight: '1px solid rgba(255,255,255,0.06)',
-        padding: '0',
         display: 'flex',
         flexDirection: 'column',
         transition: 'transform 0.3s ease, margin-left 0.3s ease',
         transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         marginLeft: isSidebarOpen ? '0' : '-260px',
         flexShrink: 0,
-        position: 'relative',
       }}>
-        {/* Gold top accent */}
         <div style={{ height: '3px', background: 'linear-gradient(90deg, var(--primary), var(--secondary))' }} />
 
-        {/* Brand */}
         <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--secondary)', marginBottom: '0.25rem' }}>
             Dashboard
           </div>
-          <h2 style={{ color: 'var(--text-main)', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.01em' }}>Admin P2P</h2>
+          <h2 style={{ color: 'var(--text-main)', fontWeight: 800, fontSize: '1.15rem' }}>Admin P2P</h2>
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {navItems.map(item => (
             <Link
               key={item.href}
               href={item.href}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '0.75rem',
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.75rem 1rem', borderRadius: '0.75rem',
                 fontWeight: isActive(item.href) ? 600 : 400,
                 fontSize: '0.9rem',
                 color: isActive(item.href) ? 'var(--text-main)' : 'var(--text-muted)',
@@ -74,35 +64,29 @@ export default function AdminClientLayout({ user, children }: any) {
                 textDecoration: 'none',
               }}
             >
-              <span style={{ fontSize: '1rem' }}>{item.icon}</span>
+              <span>{item.icon}</span>
               {item.label}
             </Link>
           ))}
         </nav>
-
-        {/* Bottom removed to avoid duplicate logout */}
       </aside>
 
       {/* ── Main ── */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-        {/* Header */}
         <header style={{
           padding: '1rem 2rem',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           background: 'rgba(255,255,255,0.02)',
           backdropFilter: 'blur(12px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
+          position: 'sticky', top: 0, zIndex: 10,
         }}>
           <button
             onClick={() => setSidebarOpen(!isSidebarOpen)}
             style={{
-              padding: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              padding: '0.5rem', background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.5rem',
+              display: 'flex', alignItems: 'center', cursor: 'pointer',
             }}
           >
             <svg width="20" height="20" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
@@ -116,9 +100,8 @@ export default function AdminClientLayout({ user, children }: any) {
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
                 padding: '0.4rem 1rem 0.4rem 0.4rem',
-                background: 'rgba(255,255,255,0.04)',
-                borderRadius: '2rem', border: '1px solid rgba(255,255,255,0.08)',
-                userSelect: 'none',
+                background: 'rgba(255,255,255,0.04)', borderRadius: '2rem',
+                border: '1px solid rgba(255,255,255,0.08)', userSelect: 'none',
               }}
             >
               <div style={{
@@ -135,7 +118,7 @@ export default function AdminClientLayout({ user, children }: any) {
 
             {isDropdownOpen && (
               <>
-                <div onClick={() => setDropdownOpen(false)} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9 }} />
+                <div onClick={() => setDropdownOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
                 <div style={{
                   position: 'absolute', top: '110%', right: 0,
                   background: 'rgba(20,20,28,0.95)', backdropFilter: 'blur(20px)',
@@ -143,16 +126,23 @@ export default function AdminClientLayout({ user, children }: any) {
                   overflow: 'hidden', minWidth: '160px', zIndex: 10,
                   boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
                 }}>
-                  <a href="/api/auth/logout?redirect=/admin/login" onClick={handleLogout} style={{ padding: '0.75rem 1rem', display: 'block', color: 'var(--error)', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none' }}>
+                  {/* Pakai button, bukan Link, agar tidak navigate sebelum confirm */}
+                  <button
+                    onClick={() => { setDropdownOpen(false); handleLogout(); }}
+                    style={{
+                      padding: '0.75rem 1rem', display: 'block', width: '100%', textAlign: 'left',
+                      color: 'var(--error)', fontWeight: 600, fontSize: '0.875rem',
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                    }}
+                  >
                     ↩ Keluar
-                  </a>
+                  </button>
                 </div>
               </>
             )}
           </div>
         </header>
 
-        {/* Content */}
         <div style={{ padding: '2rem', flex: 1 }}>
           {children}
         </div>

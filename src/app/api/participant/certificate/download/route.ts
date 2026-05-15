@@ -63,53 +63,67 @@ export async function GET() {
     // Embed font
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    const NAMA_FONT = 84;
-    const JAB_FONT = 84;
-    const LOC_FONT = 33;
+    // Font sizes
+    const NAMA_FONT = 60;
+    const JAB_FONT = 48;
+    const LOC_FONT = 24;
 
-    // PDF coordinates are from BOTTOM-LEFT
-    // Original SVG Y coords were from TOP-LEFT. 
-    // Y_pdf = height - Y_svg
-    const NAMA_Y_PDF = height - 629;
-    const JAB_Y_PDF = height - 794;
-    const LOC_Y_PDF = height - 1047;
-
-    // Calculate text widths for centering
+    // PDF coordinates from BOTTOM-LEFT
+    // Assuming cert_bg.png is 2000x1414
+    // Positioning based on visual template layout
+    
+    // Nama: center-top area (adjust Y based on your template)
+    const nameY = height - 650;
     const nameWidth = font.widthOfTextAtSize(nameText, NAMA_FONT);
+    const nameX = (width - nameWidth) / 2;
+
+    // Jabatan: below name
+    const roleY = height - 780;
     const roleWidth = font.widthOfTextAtSize(roleText, JAB_FONT);
+    const roleX = (width - roleWidth) / 2;
+
+    // Lokasi & Tanggal: bottom area
+    const locY = height - 1100;
     const locWidth = font.widthOfTextAtSize(locationText, LOC_FONT);
+    const locX = (width - locWidth) / 2;
 
-    // Color: #FFC000 = rgb(255/255, 192/255, 0)
-    const goldColor = rgb(1, 192/255, 0);
-    const blackColor = rgb(26/255, 26/255, 26/255);
+    // Color: #FFC000 = rgb(255, 192, 0)
+    const goldColor = rgb(1, 0.75, 0);
+    const darkColor = rgb(0.1, 0.1, 0.1);
 
+    // Draw name
     page.drawText(nameText, {
-      x: 1052 - (nameWidth / 2),
-      y: NAMA_Y_PDF,
+      x: nameX,
+      y: nameY,
       size: NAMA_FONT,
       font: font,
       color: goldColor,
     });
 
+    // Draw role
     page.drawText(roleText, {
-      x: 1000 - (roleWidth / 2),
-      y: JAB_Y_PDF,
+      x: roleX,
+      y: roleY,
       size: JAB_FONT,
       font: font,
       color: goldColor,
     });
 
+    // Draw location
     page.drawText(locationText, {
-      x: 1000 - (locWidth / 2),
-      y: LOC_Y_PDF,
+      x: locX,
+      y: locY,
       size: LOC_FONT,
       font: font,
-      color: blackColor,
+      color: darkColor,
     });
 
     const pdfBytes = await pdfDoc.save();
 
-    const safeName = cert.fullName.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+    const safeName = cert.fullName
+      .replace(/[^a-zA-Z0-9 \u00C0-\u024F]/g, '')
+      .trim()
+      .replace(/\s+/g, '_');
     const filename = `Sertifikat_P2P_${safeName}.pdf`;
 
     return new NextResponse(pdfBytes as unknown as BodyInit, {

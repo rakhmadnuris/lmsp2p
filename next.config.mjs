@@ -3,8 +3,22 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Apply these headers to all routes
-        source: '/(.*)',
+        // Khusus file PDF di /materials - izinkan ditampilkan dalam iframe
+        source: '/materials/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self'",
+          },
+        ],
+      },
+      {
+        // Semua route lainnya tetap aman
+        source: '/((?!materials).*)',
         headers: [
           {
             key: 'X-Content-Type-Options',
@@ -12,7 +26,7 @@ const nextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
+            value: 'DENY',
           },
           {
             key: 'X-XSS-Protection',
@@ -25,7 +39,7 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
-          }
+          },
         ],
       },
     ];
