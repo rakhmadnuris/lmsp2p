@@ -14,18 +14,23 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { province, regencyCity, role } = await prisma.user.findUniqueOrThrow({ where: { id: payload.userId } });
+    const picUser = await prisma.user.findUniqueOrThrow({ where: { id: payload.userId } });
+    const { province, regencyCity, role } = picUser;
 
     let users;
     if (role === 'PIC_PROVINSI') {
+      // PIC Provinsi hanya bisa lihat peserta di provinsinya
       users = await prisma.user.findMany({
         where: { province: province!, role: 'PARTICIPANT' },
-        include: { progress: true }
+        include: { progress: true, certificate: true },
+        orderBy: [{ regencyCity: 'asc' }, { username: 'asc' }]
       });
     } else {
+      // PIC KabKota hanya bisa lihat peserta di kab/kotanya
       users = await prisma.user.findMany({
         where: { province: province!, regencyCity: regencyCity!, role: 'PARTICIPANT' },
-        include: { progress: true }
+        include: { progress: true, certificate: true },
+        orderBy: { username: 'asc' }
       });
     }
 
@@ -48,26 +53,26 @@ export async function POST(request: Request) {
     const picUser = await prisma.user.findUniqueOrThrow({ where: { id: payload.userId } });
 
     const currentCount = await prisma.user.count({
-      where: { 
-        province: picUser.province, 
-        regencyCity: picUser.regencyCity, 
-        role: 'PARTICIPANT' 
+      where: {
+        province: picUser.province!,
+        regencyCity: picUser.regencyCity!,
+        role: 'PARTICIPANT'
       }
     });
 
     if (currentCount >= 40) {
-      return NextResponse.json({ error: 'Limit reached. Maximum 40 participants allowed per regency/city.' }, { status: 400 });
+      return NextResponse.json({ error: 'Batas maksimal 40 peserta telah tercapai.' }, { status: 400 });
     }
 
     const { username, password } = await request.json();
-    
+
     if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Username dan password wajib diisi.' }, { status: 400 });
     }
 
     const existingUser = await prisma.user.findUnique({ where: { username } });
     if (existingUser) {
-      return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
+      return NextResponse.json({ error: 'Username sudah digunakan.' }, { status: 400 });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
