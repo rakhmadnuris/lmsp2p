@@ -15,13 +15,7 @@ export async function GET(request: Request) {
 
     const { province, regencyCity, role } = await prisma.user.findUniqueOrThrow({ where: { id: payload.userId } });
 
-    let sessions;
     if (role === 'PIC_PROVINSI') {
-      sessions = await prisma.user.findMany({
-        where: { province, role: 'PIC_KABKOTA' },
-        select: { regencyCity: true }
-      });
-      // get actual discussions
       const discussions = await prisma.discussionSession.findMany({
         where: { province: province! }
       });
@@ -48,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     const picUser = await prisma.user.findUniqueOrThrow({ where: { id: payload.userId } });
-    const { regencyCity, date } = await request.json();
+    const { regencyCity, date, mode, zoomLink, location } = await request.json();
 
     if (!date) return NextResponse.json({ error: 'Date is required' }, { status: 400 });
 
@@ -66,11 +60,19 @@ export async function POST(request: Request) {
           regencyCity: targetRegencyCity!
         }
       },
-      update: { date },
+      update: {
+        date,
+        mode: mode || 'luring',
+        zoomLink: mode === 'daring' ? (zoomLink || null) : null,
+        location: mode === 'luring' ? (location || null) : null,
+      },
       create: {
         province: picUser.province!,
         regencyCity: targetRegencyCity!,
-        date
+        date,
+        mode: mode || 'luring',
+        zoomLink: mode === 'daring' ? (zoomLink || null) : null,
+        location: mode === 'luring' ? (location || null) : null,
       }
     });
 
@@ -79,3 +81,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

@@ -16,6 +16,8 @@ export default function AdminClientLayout({ user, children }: any) {
 
   const navItems = [
     { href: '/admin/dashboard', label: 'Kemajuan Peserta', icon: '📊' },
+    { href: '/admin/dashboard/stats', label: 'Statistik & Monitoring', icon: '📈' },
+    { href: '/admin/dashboard/pic', label: 'Kelola PIC', icon: '👥' },
     { href: '/admin/dashboard/answers', label: 'Jawaban Tahap 1-7', icon: '📋' },
     { href: '/admin/dashboard/register', label: 'Daftarkan Peserta', icon: '➕' },
   ];

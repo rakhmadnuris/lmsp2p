@@ -23,8 +23,9 @@ export default function AdminLogin() {
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.role !== 'ADMIN') {
-          setError('Tipe akun tidak valid. Gunakan portal login Peserta.');
+        const allowedRoles = ['ADMIN', 'PIC_PROVINSI', 'PIC_KABKOTA'];
+        if (!allowedRoles.includes(data.role)) {
+          setError('Akun peserta tidak dapat masuk di sini. Gunakan portal login Peserta.');
         } else {
           router.push(data.redirectUrl);
           router.refresh();
@@ -96,10 +97,10 @@ export default function AdminLogin() {
         </div>
 
         <h1 style={{ marginBottom: '0.4rem', textAlign: 'center', fontSize: '1.5rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff, rgba(212,162,76,0.9))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Portal Admin
+          Portal Admin & PIC
         </h1>
         <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.875rem' }}>
-          Login aman untuk administrator.
+          Login untuk Admin, PIC Provinsi, dan PIC Kabupaten/Kota.
         </p>
 
         {error && (
@@ -110,7 +111,7 @@ export default function AdminLogin() {
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
-            <label className="input-label" htmlFor="username">Nama Pengguna Admin</label>
+            <label className="input-label" htmlFor="username">Nama Pengguna</label>
             <input id="username" type="text" className="input-field" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Masukkan nama pengguna" />
           </div>
           <div className="input-group">

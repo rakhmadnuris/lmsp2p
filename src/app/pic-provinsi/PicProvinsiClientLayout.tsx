@@ -37,6 +37,12 @@ export default function PicProvinsiClientLayout({ user, children }: any) {
           }}>
             <span style={{ fontSize: '1rem' }}>🌍</span> Dashboard Provinsi
           </Link>
+          <Link href="/pic-provinsi/profile" style={{
+            display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.75rem',
+            fontWeight: 400, fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'none', border: '1px solid transparent'
+          }}>
+            <span style={{ fontSize: '1rem' }}>⚙️</span> Pengaturan Profil
+          </Link>
         </nav>
       </aside>
 

@@ -6,12 +6,15 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session')?.value;
   const { pathname } = request.nextUrl;
 
-  // Protect Admin routes
+  // Protect Admin routes (hanya ADMIN, bukan PIC)
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     if (!sessionCookie) return NextResponse.redirect(new URL('/admin/login', request.url));
     try {
       const payload = await decrypt(sessionCookie);
       if (payload.role !== 'ADMIN') {
+        // PIC yang tersesat ke /admin diarahkan ke dashboard mereka
+        if (payload.role === 'PIC_PROVINSI') return NextResponse.redirect(new URL('/pic-provinsi/dashboard', request.url));
+        if (payload.role === 'PIC_KABKOTA') return NextResponse.redirect(new URL('/pic-kabkota/dashboard', request.url));
         return NextResponse.redirect(new URL('/login', request.url));
       }
     } catch (e) {
@@ -49,32 +52,32 @@ export async function middleware(request: NextRequest) {
 
   // Protect PIC Provinsi routes
   if (pathname.startsWith('/pic-provinsi')) {
-    if (!sessionCookie) return NextResponse.redirect(new URL('/login', request.url));
+    if (!sessionCookie) return NextResponse.redirect(new URL('/admin/login', request.url));
     try {
       const payload = await decrypt(sessionCookie);
       if (payload.role !== 'PIC_PROVINSI') {
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     } catch (e) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }
 
   // Protect PIC KabKota routes
   if (pathname.startsWith('/pic-kabkota')) {
-    if (!sessionCookie) return NextResponse.redirect(new URL('/login', request.url));
+    if (!sessionCookie) return NextResponse.redirect(new URL('/admin/login', request.url));
     try {
       const payload = await decrypt(sessionCookie);
       if (payload.role !== 'PIC_KABKOTA') {
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/admin/login', request.url));
       }
     } catch (e) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }
 
   const response = NextResponse.next();
-  
+
   // Prevent caching for protected routes
   if (pathname.startsWith('/admin') || pathname.startsWith('/stages') || pathname.startsWith('/dashboard') || pathname.startsWith('/pic-provinsi') || pathname.startsWith('/pic-kabkota')) {
     response.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');

@@ -80,6 +80,9 @@ model DiscussionSession {
   province      String
   regencyCity   String
   date          String
+  mode          String   @default("luring") // 'daring' | 'luring'
+  zoomLink      String?  // Opsional, diisi kalau mode = daring
+  location      String?  // Opsional, diisi kalau mode = luring
   updatedAt     DateTime @updatedAt
 
   @@unique([province, regencyCity])
