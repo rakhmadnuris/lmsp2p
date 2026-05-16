@@ -23,8 +23,8 @@ export default function ParticipantLogin() {
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.role === 'ADMIN') {
-          setError('Tipe akun tidak valid. Gunakan portal login Admin.');
+        if (['ADMIN', 'PIC_PROVINSI', 'PIC_KABKOTA'].includes(data.role)) {
+          setError('Tipe akun tidak valid. PIC dan Admin harap masuk melalui Portal Admin.');
         } else {
           router.push(data.redirectUrl);
           router.refresh();
