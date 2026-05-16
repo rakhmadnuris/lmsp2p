@@ -28,7 +28,16 @@ export async function GET(request: Request) {
       }
     });
 
-    return NextResponse.json({ date: discussion?.date || null });
+    if (!discussion) {
+      return NextResponse.json({ date: null });
+    }
+
+    return NextResponse.json({ 
+      date: discussion.date,
+      mode: discussion.mode,
+      zoomLink: discussion.zoomLink,
+      location: discussion.location
+    });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch discussion' }, { status: 500 });
   }

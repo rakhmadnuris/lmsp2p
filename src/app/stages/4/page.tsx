@@ -8,6 +8,9 @@ export default function Stage4() {
   const [isLocked, setIsLocked] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [discussionDate, setDiscussionDate] = useState<string | null>(null);
+  const [discussionMode, setDiscussionMode] = useState<string | null>(null);
+  const [discussionZoom, setDiscussionZoom] = useState<string | null>(null);
+  const [discussionLocation, setDiscussionLocation] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -19,6 +22,9 @@ export default function Stage4() {
       }
       if (discussionData.date) {
         setDiscussionDate(discussionData.date);
+        setDiscussionMode(discussionData.mode);
+        setDiscussionZoom(discussionData.zoomLink);
+        setDiscussionLocation(discussionData.location);
       }
     }).finally(() => setInitialLoad(false));
   }, []);
@@ -63,16 +69,28 @@ export default function Stage4() {
         <div style={{ display: 'grid', gap: '1rem', marginBottom: '2rem' }}>
           <div>
             <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.875rem' }}>Format</strong>
-            <span>Online (Zoom)</span>
+            <span style={{ textTransform: 'capitalize' }}>
+              {discussionMode ? (discussionMode === 'daring' ? '🌐 Daring (Online)' : '📍 Luring (Offline)') : 'Belum ditentukan'}
+            </span>
           </div>
           <div>
             <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.875rem' }}>Tanggal &amp; Waktu</strong>
             <span>{discussionDate ? new Date(discussionDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Belum diatur. Menunggu jadwal dari PIC Kab/Kota.'}</span>
           </div>
-          <div>
-            <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.875rem' }}>Tautan Meeting</strong>
-            <a href="#" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>https://zoom.us/j/123456789</a>
-          </div>
+          
+          {discussionMode === 'daring' && discussionZoom && (
+            <div>
+              <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.875rem' }}>Tautan Meeting (Zoom)</strong>
+              <a href={discussionZoom} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>{discussionZoom}</a>
+            </div>
+          )}
+
+          {discussionMode === 'luring' && discussionLocation && (
+            <div>
+              <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.875rem' }}>Lokasi Pelaksanaan</strong>
+              <span>{discussionLocation}</span>
+            </div>
+          )}
         </div>
         
         {!isLocked && (
